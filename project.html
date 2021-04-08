@@ -17,21 +17,56 @@
                 width: 100%;
                 height: 100%;
             }
+			#blocker {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0,0,0,0.5);
+			}
+
+			#instructions {
+				width: 100%;
+				height: 100%;
+
+				display: -webkit-box;
+				display: -moz-box;
+				display: box;
+
+				-webkit-box-orient: horizontal;
+				-moz-box-orient: horizontal;
+				box-orient: horizontal;
+
+				-webkit-box-pack: center;
+				-moz-box-pack: center;
+				box-pack: center;
+
+				-webkit-box-align: center;
+				-moz-box-align: center;
+				box-align: center;
+
+				color: #ffffff;
+				text-align: center;
+				font-family: Arial;
+				font-size: 14px;
+				line-height: 24px;
+
+				cursor: pointer;
+			}
         </style>
     </head>
     <body>
+        <div id="blocker">
+
+			<div id="instructions">
+				<span style="font-size:36px">Click to enter</span>
+				<br /><br />
+				Move: WASD<br/>
+				Look: MOUSE
+			</div>
+
+		</div>
         <script src="js/three.js"></script>
-        <script src="project.js"></script>
+        <script type="module" src="project.js"></script>
+        <script type="module" src="js/PointerLockControls.js"></script>
     </body>
 </html>
-
-<!--
-    MODES OF OPERATION
-    -Pressing '1', '2', '3', '4', or '5' will pause/resume animation of each object seperately
-    -Pressing 'o' will switch to an orthographic camera
-    -Pressing 'p' will switch to a projection camera
-    -Pressing 'w' will move forward (not working for orthographic)
-    -Pressing 's' will move backwards (not working for orthographic)
-    -Pressing 'a' will pan (rotate) to the left
-    -Pressing 'd' will pan (rotate) to the right
--->

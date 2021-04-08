@@ -1,64 +1,165 @@
-//setup scene and cameras
-const scene = new THREE.Scene();
-const cameraP = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    1,
-    10000
-);
+import { PointerLockControls } from './js/PointerLockControls.js';
 
-//initialize camera as projection
-let camera = cameraP;
+let camera, scene, renderer, controls;
 
-//setup WebGL renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.physicallyCorrectLights = true;
+let objects = [];
+let raycaster;
 
-//create light
-const light = new THREE.AmbientLight( 0x404040 );
-//const light = new THREE.DirectionalLight('white', 8);
-//light.position.set(0,0,10);
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
 
-renderer.setSize(window.innerWidth, window.innerHeight);
+let prevTime = performance.now();
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+const vertex = new THREE.Vector3();
+const color = new THREE.Color();
 
-document.body.appendChild(renderer.domElement);
+init();
+animate();
 
-//create floor and set position/texture
-const floorTexture = new THREE.TextureLoader().load('./img/floor.jpg');
-floorTexture.wrapS = THREE.RepeatWrapping;
-floorTexture.wrapT = THREE.RepeatWrapping;
-const floorMaterial = new THREE.MeshLambertMaterial({map: floorTexture});
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(5,5), floorMaterial);
-floor.material.side = THREE.DoubleSide;
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0xffffff );
 
-camera.position.z = 5;
+    camera = new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth / window.innerHeight,
+        1,
+        10000
+    );
+    camera.position.y = 10;
 
-//add all objects/lights to scene
-scene.add(camera);
-scene.add(light);
-scene.add(floor);
+    const light = new THREE.AmbientLight( 0x404040 );
+    scene.add(light);
 
-//handle window resizing dynamically
+    controls = new PointerLockControls(camera, document.body);
+
+    const blocker = document.getElementById("blocker");
+    const instructions = document.getElementById("instructions");
+
+    instructions.addEventListener("click", function() {
+        controls.lock();
+    });
+
+    controls.addEventListener("lock", function() {
+        instructions.style.display = "none";
+        blocker.style.display = "none";
+    });
+
+    controls.addEventListener("unlock", function() {
+        blocker.style.display = "block";
+        instructions.style.display = "";
+    });
+
+    scene.add(controls.getObject());
+
+    const onKeyDown = function ( event ) {
+        switch ( event.code ) {
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = true;
+                break;
+
+            case 'ArrowLeft':
+            case 'KeyA':
+                moveLeft = true;
+                break;
+
+            case 'ArrowDown':
+            case 'KeyS':
+                moveBackward = true;
+                break;
+
+            case 'ArrowRight':
+            case 'KeyD':
+                moveRight = true;
+                break;
+        }
+    };
+
+    const onKeyUp = function ( event ) {
+        switch ( event.code ) {
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = false;
+                break;
+
+            case 'ArrowLeft':
+            case 'KeyA':
+                moveLeft = false;
+                break;
+
+            case 'ArrowDown':
+            case 'KeyS':
+                moveBackward = false;
+                break;
+
+            case 'ArrowRight':
+            case 'KeyD':
+                moveRight = false;
+                break;
+        }
+    };
+
+    document.addEventListener( 'keydown', onKeyDown );
+    document.addEventListener( 'keyup', onKeyUp );
+    
+    raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+
+    //create floor and set position/texture
+    const floorTexture = new THREE.TextureLoader().load('./img/floor.jpg');
+    floorTexture.wrapS = THREE.RepeatWrapping;
+    floorTexture.wrapT = THREE.RepeatWrapping;
+    floorTexture.offset.set(0,0);
+    floorTexture.repeat.set(100,100);
+    const floorMaterial = new THREE.MeshLambertMaterial({map: floorTexture});
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(2000,2000), floorMaterial);
+    floor.rotation.x = Math.PI / 2;
+    floor.material.side = THREE.DoubleSide;
+    scene.add(floor);
+
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    window.addEventListener("resize", onWindowResize);
+}
+
 function onWindowResize() {
-    //change aspect of projection camera
-	cameraP.aspect = window.innerWidth / window.innerHeight;
-    //update projection camera
-	cameraP.updateProjectionMatrix();
-    //update WebGL renderer size
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-//animation function called during refresh cycle
 function animate() {
-
     requestAnimationFrame(animate);
-    //render all updated objects
+
+    const time = performance.now();
+
+    if(controls.isLocked === true) {
+        raycaster.ray.origin.copy(controls.getObject().position);
+        raycaster.ray.origin.y -= 10;
+
+        const delta = (time-prevTime) / 1000;
+
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+        velocity.y -= 9.8 * 100.0 * delta;
+
+        direction.z = Number( moveForward ) - Number( moveBackward );
+        direction.x = Number( moveRight ) - Number( moveLeft );
+        direction.normalize();
+
+        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+        if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+
+        controls.moveRight( - velocity.x * delta );
+        controls.moveForward( - velocity.z * delta );
+    }
+    prevTime = time;
+
     renderer.render(scene, camera);
 }
-
-//start animation loop
-animate();
-
-//add event listener for window resize
-window.addEventListener('resize', onWindowResize, false);
-
