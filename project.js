@@ -118,7 +118,31 @@ function init() {
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(2000,2000), floorMaterial);
     floor.rotation.x = Math.PI / 2;
     floor.material.side = THREE.DoubleSide;
-    scene.add(floor);
+    //scene.add(floor);
+
+    let materials = [
+        new THREE.MeshLambertMaterial({
+            map: (new THREE.TextureLoader().load('./img/wallpaper1.jpg')), side: THREE.DoubleSide 
+        }),
+        new THREE.MeshLambertMaterial({
+            map: (new THREE.TextureLoader().load('./img/wallpaper1.jpg')), side: THREE.DoubleSide
+        }),
+        new THREE.MeshLambertMaterial({
+            map: (new THREE.TextureLoader().load('./img/floor.jpg')), side: THREE.DoubleSide
+        }),
+        new THREE.MeshLambertMaterial({
+            map: (new THREE.TextureLoader().load('./img/floor.jpg')), side: THREE.DoubleSide
+        }),
+        new THREE.MeshLambertMaterial({
+            map: (new THREE.TextureLoader().load('./img/wallpaper1.jpg')), side: THREE.DoubleSide
+        }),
+        new THREE.MeshLambertMaterial({
+            map: (new THREE.TextureLoader().load('./img/wallpaper1.jpg')), side: THREE.DoubleSide
+        })
+    ];
+    const room1 = new THREE.Mesh(new THREE.BoxGeometry(50, 25, 50), materials);
+    room1.position.y = 10;
+    scene.add(room1);
 
     renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setPixelRatio(window.devicePixelRatio);
